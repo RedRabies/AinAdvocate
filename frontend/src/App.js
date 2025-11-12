@@ -1,49 +1,56 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from 'react';
+import './App.css';
+import Register from './Register';
+import Login from './Login';
+import Homepage from './Homepage';
 
 function App() {
-  const [file, setFile] = useState(null);
-  const [message, setMessage] = useState("");
-  const [preview, setPreview] = useState("");
+  const [view, setView] = useState('home'); // 'home' | 'login' | 'register' | 'profile'
+  const [user, setUser] = useState(null);
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-    setPreview(URL.createObjectURL(e.target.files[0]));
+  useEffect(() => {
+    const u = localStorage.getItem('user');
+    if (u) setUser(JSON.parse(u));
+  }, []);
+
+  const onLogin = (u) => {
+    setUser(u);
+    setView('profile');
   };
 
-  const handleUpload = async (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const res = await fetch("http://localhost:5000/api/uploads", {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await res.json();
-    setMessage(data.message);
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setView('login');
   };
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
-      <h1>📁 File Upload (AinAdvocate)</h1>
-      <form onSubmit={handleUpload}>
-        <input type="file" onChange={handleFileChange} required />
-        <button type="submit">Upload</button>
-      </form>
-      {message && <p>{message}</p>}
-      {preview && (
-        <div style={{ marginTop: "1rem" }}>
-          <h4>Preview:</h4>
-          <img
-            src={preview}
-            alt="Preview"
-            style={{ maxWidth: "300px", borderRadius: "10px" }}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
+    <div className="App" style={{padding:20}}>
+      {view === 'home' && <Homepage onNavigate={setView} />}
 
-export default App;
+      {view !== 'home' && (
+        <div>
+          <h2>AinAdvocate — Auth Demo</h2>
+          {!user && (
+            <div style={{marginBottom:12}}>
+              <button onClick={() => setView('login')} disabled={view==='login'}>Login</button>
+              <button onClick={() => setView('register')} disabled={view==='register'} style={{marginLeft:8}}>Register</button>
+              <button onClick={() => setView('home')} style={{marginLeft:8}}>Home</button>
+            </div>
+          )}
+
+          {user ? (
+            <div>
+              <h3>Welcome, {user.name} ({user.role})</h3>
+              <p>Email: {user.email}</p>
+              <button onClick={logout}>Logout</button>
+            </div>
+          ) : (
+            <div>
+              {view === 'login' && <Login onLogin={onLogin} />}
+              {view === 'register' && <Register onRegistered={() => setView('login')} />}
+            </div>
+          )}
+
