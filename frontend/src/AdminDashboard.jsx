@@ -1,0 +1,375 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getAllLawyersAdmin, verifyLawyer } from '../../services/lawyer.service';
+import { getAllResources } from '../../services/resource.service';
+import axios from 'axios';
+import '../../styles/pages/dashboard.css';
+import '../../styles/components/button.css';
+import { useToast } from '../../components/common/Toast';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
+
+const AdminDashboard = () => {
+    const [view, setView] = useState('overview'); // overview, clients, lawyers, resources
+    const [stats, setStats] = useState({ clients: 0, lawyers: 0, pending: 0, resources: 0 });
+    const [clients, setClients] = useState([]);
+    const [lawyers, setLawyers] = useState([]);
+    const [resources, setResources] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
+    const { addToast } = useToast();
+
+    // Modal State
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalConfig, setModalConfig] = useState({});
+
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    const authHeader = () => {
+        const token = sessionStorage.getItem('token');
+        return { headers: { Authorization: `Bearer ${token}` } };
+    };
+
+    const confirmAction = (action, title, message) => {
+        setModalConfig({ onConfirm: action, title, message });
+        setModalOpen(true);
+    };
+
+    const handleLogout = () => {
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        navigate('/login');
+    };
+
+    const loadData = async () => {
+        try {
+            // Fetch Clients
+            const usersRes = await axios.get('http://localhost:5000/api/auth/users', authHeader());
+            const allUsers = usersRes.data;
+            const clientList = allUsers.filter(u => (u.role && u.role.toLowerCase() === 'client'));
+            setClients(clientList);
+
+            // Fetch Lawyers
+            const lawyerProfiles = await getAllLawyersAdmin();
+            setLawyers(lawyerProfiles);
+
+            // Fetch Resources
+            const resourceList = await getAllResources();
+            setResources(resourceList);
+
+            setStats({
+                clients: clientList.length,
+                lawyers: lawyerProfiles.length,
+                pending: lawyerProfiles.filter(l => !l.isVerified).length,
+                resources: resourceList.length
+            });
+            setLoading(false);
+        } catch (err) {
+            console.error(err);
+            setLoading(false);
+        }
+    };
+
+    // --- Actions ---
+
+    const handleVerify = async (id) => {
+        const licenseNumber = window.prompt("Enter the official License Number to assign to this lawyer:");
+        if (licenseNumber) {
+            try {
+                // Pass licenseNumber in the body
+                await axios.put(`http://localhost:5000/api/lawyers/${id}/verify`, { licenseNumber }, authHeader());
+                addToast("Lawyer verified successfully", 'success');
+                loadData();
+            } catch (err) {
+                addToast('Error verifying: ' + (err.response?.data?.message || err.message), 'error');
+            }
+        }
+    };
+
+    const executeBan = async (id, type) => {
+        try {
+            await axios.put(`http://localhost:5000/api/auth/admin/${type}/${id}/ban`, {}, authHeader());
+            loadData();
+            addToast(`User ${type} ban status updated`, 'success');
+        } catch (err) {
+            addToast('Error banning user', 'error');
+        }
+    };
+
+    const executeDelete = async (id, type) => {
+        try {
+            await axios.delete(`http://localhost:5000/api/auth/admin/${type}/${id}`, authHeader());
+            loadData();
+            addToast('User deleted', 'info');
+        } catch (err) {
+            addToast('Error deleting user', 'error');
+        }
+    };
+
+    const executeDeleteResource = async (id) => {
+        try {
+            await axios.delete(`http://localhost:5000/api/resources/${id}`, authHeader());
+            loadData();
+            addToast('Resource deleted', 'info');
+        } catch (err) {
+            addToast('Error deleting resource', 'error');
+        }
+    };
+
+    if (loading) return <div className="container" style={{ padding: '40px' }}>Loading...</div>;
+
+    // --- Sub Components ---
+
+    const StatCard = ({ count, label, icon, color, bgColor }) => (
+        <div className="stat-card" style={{
+            background: 'white',
+            padding: '24px',
+            borderRadius: '16px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+            display: 'flex',
+            alignItems: 'center',
+            border: 'none',
+            transition: 'transform 0.2s',
+            cursor: 'default'
+        }}>
+            <div style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '16px',
+                background: bgColor,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: '20px',
+                color: color,
+                flexShrink: 0
+            }}>
+                {icon}
+            </div>
+            <div>
+                <h3 style={{ fontSize: '2rem', marginBottom: '4px', color: '#1e293b', fontWeight: '700' }}>{count}</h3>
+                <p style={{ color: '#64748b', fontSize: '0.95rem', fontWeight: '500', margin: 0 }}>{label}</p>
+            </div>
+        </div>
+    );
+
+    // Icons
+    const Icons = {
+        Clients: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
+        Lawyers: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>, // Briefcase-ish
+        Pending: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>,
+        Resources: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+    };
+
+    const Overview = () => (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px' }}>
+            <StatCard
+                count={stats.clients}
+                label="Total Clients"
+                icon={Icons.Clients}
+                color="#3b82f6"
+                bgColor="#eff6ff"
+            />
+            <StatCard
+                count={stats.lawyers}
+                label="Total Lawyers"
+                icon={Icons.Lawyers}
+                color="#8b5cf6"
+                bgColor="#f5f3ff"
+            />
+            <StatCard
+                count={stats.pending}
+                label="Pending Verification"
+                icon={Icons.Pending}
+                color="#f59e0b"
+                bgColor="#fffbeb"
+            />
+            <StatCard
+                count={stats.resources}
+                label="Resources"
+                icon={Icons.Resources}
+                color="#10b981"
+                bgColor="#ecfdf5"
+            />
+        </div>
+    );
+
+    const ClientTable = () => (
+        <div className="card" style={{ padding: '0', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', border: 'none' }}>
+            <h3 style={{ padding: '20px', borderBottom: '1px solid #f1f5f9', margin: 0, color: '#1e293b' }}>Registered Clients</h3>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead style={{ background: '#f8fafc', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <tr>
+                        <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600' }}>Name</th>
+                        <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600' }}>Email</th>
+                        <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600' }}>Status</th>
+                        <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600' }}>Actions</th>
+                    </tr>
+                </thead>
+                <tbody style={{ fontSize: '0.95rem', color: '#334155' }}>
+                    {clients.map(client => (
+                        <tr key={client._id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                            <td style={{ padding: '16px 20px' }}>{client.name}</td>
+                            <td style={{ padding: '16px 20px' }}>{client.email}</td>
+                            <td style={{ padding: '16px 20px' }}>
+                                {client.isBanned ?
+                                    <span style={{ background: '#fee2e2', color: '#dc2626', padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600' }}>Banned</span> :
+                                    <span style={{ background: '#dcfce7', color: '#16a34a', padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600' }}>Active</span>}
+                            </td>
+                            <td style={{ padding: '16px 20px' }}>
+                                <button onClick={() => confirmAction(() => executeBan(client._id, 'client'), 'Confirm Action', `Are you sure you want to ${client.isBanned ? 'unban' : 'ban'} this client?`)} className="btn btn-sm" style={{ marginRight: '10px', background: client.isBanned ? '#cbd5e1' : '#f59e0b', color: 'white', border: 'none' }}>
+                                    {client.isBanned ? 'Unban' : 'Ban'}
+                                </button>
+                                <button onClick={() => confirmAction(() => executeDelete(client._id, 'client'), 'Delete Client', 'Are you sure you want to delete this client? This cannot be undone.')} className="btn btn-sm btn-danger" style={{ border: 'none' }}>
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+
+    const LawyerTable = () => (
+        <div className="card" style={{ padding: '0', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', border: 'none' }}>
+            <h3 style={{ padding: '20px', borderBottom: '1px solid #f1f5f9', margin: 0, color: '#1e293b' }}>Lawyer Management</h3>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead style={{ background: '#f8fafc', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <tr>
+                        <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600' }}>Name</th>
+                        <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600' }}>License</th>
+                        <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600' }}>Verification</th>
+                        <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600' }}>Status</th>
+                        <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600' }}>Actions</th>
+                    </tr>
+                </thead>
+                <tbody style={{ fontSize: '0.95rem', color: '#334155' }}>
+                    {lawyers.map(lawyer => (
+                        <tr key={lawyer._id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                            <td style={{ padding: '16px 20px' }}>
+                                <div style={{ fontWeight: '600' }}>{lawyer.name || 'Unknown'}</div>
+                                <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{lawyer.email}</div>
+                            </td>
+                            <td style={{ padding: '16px 20px' }}>{lawyer.licenseNumber}</td>
+                            <td style={{ padding: '16px 20px' }}>
+                                {lawyer.isVerified ?
+                                    <span style={{ background: '#dcfce7', color: '#16a34a', padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600' }}>Verified</span> :
+                                    <span style={{ background: '#ffedd5', color: '#c2410c', padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600' }}>Pending</span>
+                                }
+                            </td>
+                            <td style={{ padding: '16px 20px' }}>
+                                {lawyer.isBanned ?
+                                    <span style={{ background: '#fee2e2', color: '#dc2626', padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600' }}>Banned</span> :
+                                    <span style={{ background: '#f1f5f9', color: '#475569', padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600' }}>Active</span>}
+                            </td>
+                            <td style={{ padding: '16px 20px', display: 'flex', gap: '8px' }}>
+                                {!lawyer.isVerified && (
+                                    <button onClick={() => handleVerify(lawyer._id)} className="btn btn-sm btn-primary" style={{ border: 'none' }}>Verify</button>
+                                )}
+                                <button onClick={() => confirmAction(() => executeBan(lawyer._id, 'lawyer'), 'Confirm Action', `Are you sure you want to ${lawyer.isBanned ? 'unban' : 'ban'} this lawyer?`)} className="btn btn-sm" style={{ background: lawyer.isBanned ? '#cbd5e1' : '#f59e0b', color: 'white', border: 'none' }}>
+                                    {lawyer.isBanned ? 'Unban' : 'Ban'}
+                                </button>
+                                <button onClick={() => confirmAction(() => executeDelete(lawyer._id, 'lawyer'), 'Delete Lawyer', 'Are you sure you want to delete this lawyer?')} className="btn btn-sm btn-danger" style={{ border: 'none' }}>
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+
+    const ResourceTable = () => (
+        <div className="card" style={{ padding: '0', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', border: 'none' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', borderBottom: '1px solid #f1f5f9' }}>
+                <h3 style={{ margin: 0, color: '#1e293b' }}>Resource Library</h3>
+                <button onClick={() => alert('Feature to create resource here coming soon. Use API for now.')} className="btn btn-sm btn-primary" style={{ border: 'none' }}>Add New</button>
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead style={{ background: '#f8fafc', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <tr>
+                        <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600' }}>Title</th>
+                        <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600' }}>Category</th>
+                        <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600' }}>Actions</th>
+                    </tr>
+                </thead>
+                <tbody style={{ fontSize: '0.95rem', color: '#334155' }}>
+                    {resources.map(res => (
+                        <tr key={res._id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                            <td style={{ padding: '16px 20px', fontWeight: '500' }}>{res.title}</td>
+                            <td style={{ padding: '16px 20px' }}>
+                                <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600' }}>
+                                    {res.category}
+                                </span>
+                            </td>
+                            <td style={{ padding: '16px 20px' }}>
+                                <button onClick={() => confirmAction(() => executeDeleteResource(res._id), 'Delete Resource', 'Are you sure you want to delete this resource?')} className="btn btn-sm btn-danger" style={{ border: 'none' }}>
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+
+    // Sidebar & Layout Styles
+    // ... (Use same styles as before, just kept concise for replacement)
+    const sidebarStyle = { width: '260px', background: '#0f172a', color: 'white', display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0, boxShadow: '4px 0 10px rgba(0,0,0,0.1)', zIndex: 10 };
+    const menuItemStyle = (isActive) => ({ padding: '16px 24px', cursor: 'pointer', background: isActive ? 'linear-gradient(90deg, rgba(59,130,246,0.1) 0%, rgba(59,130,246,0) 100%)' : 'transparent', color: isActive ? '#3b82f6' : '#94a3b8', fontWeight: isActive ? '600' : '500', borderLeft: isActive ? '4px solid #3b82f6' : '4px solid transparent', transition: 'all 0.2s', display: 'flex', alignItems: 'center', fontSize: '0.95rem' });
+
+    return (
+        <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
+            <aside style={sidebarStyle}>
+                <div style={{ padding: '30px 24px', fontSize: '1.5rem', fontWeight: '800', borderBottom: '1px solid #1e293b', color: 'white', letterSpacing: '-0.5px' }}>
+                    User<span style={{ color: '#3b82f6' }}>Dashboard</span>
+                </div>
+                <nav style={{ marginTop: '20px' }}>
+                    <div onClick={() => setView('overview')} style={menuItemStyle(view === 'overview')}> Dashboard Overview </div>
+                    <div onClick={() => setView('clients')} style={menuItemStyle(view === 'clients')}> Client Management </div>
+                    <div onClick={() => setView('lawyers')} style={menuItemStyle(view === 'lawyers')}> Lawyer Management </div>
+                    <div onClick={() => setView('resources')} style={menuItemStyle(view === 'resources')}> Resource Library </div>
+                </nav>
+                <div style={{ marginTop: 'auto', padding: '24px', borderTop: '1px solid #1e293b' }}>
+                    <button onClick={handleLogout} className="btn" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '100%', border: 'none', fontWeight: '600', padding: '12px' }}>
+                        Sign Out
+                    </button>
+                </div>
+            </aside>
+
+            <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+                <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h2 style={{ fontSize: '2rem', color: '#0f172a', fontWeight: '800', letterSpacing: '-0.5px', marginBottom: '8px' }}>
+                            {view === 'overview' && 'Dashboard Overview'}
+                            {view === 'clients' && 'Client Management'}
+                            {view === 'lawyers' && 'Lawyer Verification'}
+                            {view === 'resources' && 'Resource Library'}
+                        </h2>
+                        <p style={{ color: '#64748b', margin: 0 }}>Welcome back, Admin</p>
+                    </div>
+                </header>
+
+                {view === 'overview' && <Overview />}
+                {view === 'clients' && <ClientTable />}
+                {view === 'lawyers' && <LawyerTable />}
+                {view === 'resources' && <ResourceTable />}
+            </main>
+
+            <ConfirmationModal
+                isOpen={modalOpen}
+                onClose={() => setModalOpen(false)}
+                onConfirm={modalConfig.onConfirm}
+                title={modalConfig.title}
+                message={modalConfig.message}
+            />
+        </div>
+    );
+};
+
+export default AdminDashboard;
+
