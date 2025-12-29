@@ -22,6 +22,11 @@ import EditLawyerProfile from './pages/lawyers/EditLawyerProfile';
 import ResourceList from './pages/resources/ResourceList';
 import ResourceDetails from './pages/resources/ResourceDetails';
 
+import CreateCase from './pages/cases/CreateCase';
+import MyCases from './pages/cases/MyCases';
+import CaseDetails from './pages/cases/CaseDetails';
+import EditCase from './pages/cases/EditCase';
+
 import Header from './components/common/Header';
 import Footer from './components/common/Footer';
 
@@ -46,7 +51,7 @@ function App() {
               <Route path="/verify-otp" element={<VerifyOTP />} />
 
               {/* Protected Routes */}
-              <Route path="/dashboard" element={<PrivateRoute><ClientDashboard /></PrivateRoute>} />
+              <Route path="/client-dashboard" element={<PrivateRoute><ClientDashboard /></PrivateRoute>} />
               <Route path="/lawyer-dashboard" element={<PrivateRoute><LawyerDashboard /></PrivateRoute>} />
               <Route path="/admin-dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
 
@@ -57,6 +62,11 @@ function App() {
 
               <Route path="/resources" element={<ResourceList />} />
               <Route path="/resources/:id" element={<ResourceDetails />} />
+
+              <Route path="/cases/create" element={<PrivateRoute><CreateCase /></PrivateRoute>} />
+              <Route path="/cases/my" element={<PrivateRoute><MyCases /></PrivateRoute>} />
+              <Route path="/cases/:id" element={<PrivateRoute><CaseDetails /></PrivateRoute>} />
+              <Route path="/cases/:id/edit" element={<PrivateRoute><EditCase /></PrivateRoute>} />
             </Routes>
           </div>
           <Footer />

@@ -46,7 +46,15 @@ const LawyerDetails = () => {
                         color: '#4a5568',
                         marginRight: '30px'
                     }}>
-                        {lawyer.name ? lawyer.name.charAt(0).toUpperCase() : 'L'}
+                        {lawyer.profileImage ? (
+                            <img
+                                src={`http://localhost:5000${lawyer.profileImage}`}
+                                alt={lawyer.name}
+                                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                            />
+                        ) : (
+                            lawyer.name ? lawyer.name.charAt(0).toUpperCase() : 'L'
+                        )}
                     </div>
                     <div>
                         <h1 style={{ margin: '0 0 10px 0', fontSize: '2rem' }}>{lawyer.name}</h1>

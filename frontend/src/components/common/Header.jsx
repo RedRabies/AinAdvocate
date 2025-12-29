@@ -26,7 +26,7 @@ const Header = () => {
                                 Hello, {user.name} ({user.role})
                             </span>
                             {user.role === 'lawyer' && <Link to="/lawyer-dashboard">Dashboard</Link>}
-                            {user.role === 'client' && <Link to="/dashboard">Dashboard</Link>}
+                            {user.role === 'client' && <Link to="/client-dashboard">Dashboard</Link>}
                             {user.role === 'admin' && <Link to="/admin-dashboard">Admin</Link>}
                             <button onClick={handleLogout} className="btn-link">Logout</button>
                         </div>

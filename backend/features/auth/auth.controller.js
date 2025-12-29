@@ -53,7 +53,8 @@ exports.register = async (req, res) => {
       newUser = await Lawyer.create({
         name, email, passwordHash, role: 'lawyer', otp, otpExpiry,
         licenseNumber: 'PENDING',
-        isVerified: false // Explicitly false until OTP
+        isEmailVerified: false, // OTP verification
+        isVerified: false // Admin verification required
       });
     } else {
       newUser = await Client.create({
@@ -66,7 +67,9 @@ exports.register = async (req, res) => {
     try {
       await sendEmail(email, 'Your OTP Code', `Your verification code is: ${otp}`);
     } catch (emailErr) {
-      console.error("Email failed", emailErr);
+      console.error(`[Auth] OTP Email failed for ${email}:`, emailErr.message);
+      // Log more details if available
+      if (emailErr.response) console.error(emailErr.response.body);
       // Rollback: Delete the user so they can try again
       if (role === 'lawyer') await Lawyer.findByIdAndDelete(newUser._id);
       else await Client.findByIdAndDelete(newUser._id);
@@ -102,7 +105,12 @@ exports.login = async (req, res) => {
 
     // CHECK VERIFICATION
     // Admin (User model) might not need OTP, so check role or existence of isVerified field
-    if ((user.role === 'client' || user.role === 'lawyer') && !user.isVerified) {
+    // CHECK VERIFICATION
+    if (user.role === 'lawyer') {
+      if (!user.isEmailVerified) return res.status(403).json({ message: 'Please verify your email address first.' });
+      // We allow login even if !isVerified (Practice), so they can see "Pending" status on dashboard.
+    } else if (user.role === 'client' && !user.isVerified) {
+      // Clients use isVerified for email verification (legacy/standard flow)
       return res.status(403).json({ message: 'Please verify your email address first.' });
     }
 
@@ -135,12 +143,14 @@ exports.verifyOTP = async (req, res) => {
 
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    if (user.isVerified) return res.status(400).json({ message: 'User already verified' });
-
-    if (user.otp !== otp) return res.status(400).json({ message: 'Invalid OTP' });
-    if (user.otpExpiry < Date.now()) return res.status(400).json({ message: 'OTP expired' });
-
-    user.isVerified = true;
+    if (user.role === 'lawyer') {
+      if (user.isEmailVerified) return res.status(400).json({ message: 'User already verified' });
+      user.isEmailVerified = true;
+      // Do NOT set isVerified = true. That is for Admin.
+    } else {
+      if (user.isVerified) return res.status(400).json({ message: 'User already verified' });
+      user.isVerified = true;
+    }
     user.otp = undefined;
     user.otpExpiry = undefined;
     await user.save();

@@ -28,7 +28,7 @@ export default function Login() {
       const role = res.user.role;
       if (role === 'lawyer') navigate('/lawyer-dashboard');
       else if (role === 'admin') navigate('/admin-dashboard');
-      else navigate('/dashboard');
+      else navigate('/client-dashboard');
     } else if (res && res.message) {
       setMsg(res.message);
     } else if (res && res.errors) {

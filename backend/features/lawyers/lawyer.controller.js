@@ -46,9 +46,25 @@ exports.getLawyerById = async (req, res) => {
 };
 
 exports.getAllLawyers = async (req, res) => {
-    // Public get - only verified? Or all? Usually public needs verified.
     try {
-        const lawyers = await Lawyer.find({ isVerified: true });
+        const { search, location, specialization } = req.query;
+
+        // Base query: Only show Verified lawyers to the public
+        let query = { isVerified: true, isBanned: false };
+
+        if (search) {
+            query.name = { $regex: search, $options: 'i' };
+        }
+
+        if (location) {
+            query.location = { $regex: location, $options: 'i' };
+        }
+
+        if (specialization) {
+            query.specialization = { $in: [specialization] };
+        }
+
+        const lawyers = await Lawyer.find(query);
         res.json(lawyers);
     } catch (err) {
         res.status(500).json({ message: err.message });

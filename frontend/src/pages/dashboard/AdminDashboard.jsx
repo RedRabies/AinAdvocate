@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllLawyersAdmin, verifyLawyer } from '../../services/lawyer.service';
-import { getAllResources } from '../../services/resource.service';
+import { getAllResources, createResource } from '../../services/resource.service';
 import axios from 'axios';
 import '../../styles/pages/dashboard.css';
 import '../../styles/components/button.css';
@@ -21,6 +21,9 @@ const AdminDashboard = () => {
     // Modal State
     const [modalOpen, setModalOpen] = useState(false);
     const [modalConfig, setModalConfig] = useState({});
+    const [detailModalOpen, setDetailModalOpen] = useState(false);
+    const [selectedLawyer, setSelectedLawyer] = useState(null);
+    const [resourceModalOpen, setResourceModalOpen] = useState(false); // New state for Resource Modal
 
     useEffect(() => {
         loadData();
@@ -114,6 +117,22 @@ const AdminDashboard = () => {
             addToast('Resource deleted', 'info');
         } catch (err) {
             addToast('Error deleting resource', 'error');
+        }
+    };
+
+    const handleCreateResource = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            await createResource(data);
+            addToast('Resource created successfully', 'success');
+            setResourceModalOpen(false);
+            loadData();
+        } catch (err) {
+            addToast('Failed to create resource', 'error');
+            console.error(err);
         }
     };
 
@@ -265,6 +284,7 @@ const AdminDashboard = () => {
                                     <span style={{ background: '#f1f5f9', color: '#475569', padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600' }}>Active</span>}
                             </td>
                             <td style={{ padding: '16px 20px', display: 'flex', gap: '8px' }}>
+                                <button onClick={() => { setSelectedLawyer(lawyer); setDetailModalOpen(true); }} className="btn btn-sm btn-outline-primary" style={{ border: 'none', background: '#e0f2fe', color: '#0284c7' }}>View</button>
                                 {!lawyer.isVerified && (
                                     <button onClick={() => handleVerify(lawyer._id)} className="btn btn-sm btn-primary" style={{ border: 'none' }}>Verify</button>
                                 )}
@@ -286,7 +306,7 @@ const AdminDashboard = () => {
         <div className="card" style={{ padding: '0', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', border: 'none' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', borderBottom: '1px solid #f1f5f9' }}>
                 <h3 style={{ margin: 0, color: '#1e293b' }}>Resource Library</h3>
-                <button onClick={() => alert('Feature to create resource here coming soon. Use API for now.')} className="btn btn-sm btn-primary" style={{ border: 'none' }}>Add New</button>
+                <button onClick={() => setResourceModalOpen(true)} className="btn btn-sm btn-primary" style={{ border: 'none' }}>Add New</button>
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead style={{ background: '#f8fafc', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -367,6 +387,100 @@ const AdminDashboard = () => {
                 title={modalConfig.title}
                 message={modalConfig.message}
             />
+
+            {/* Lawyer Details Modal */}
+            {detailModalOpen && selectedLawyer && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                    <div style={{ background: 'white', padding: '30px', borderRadius: '16px', maxWidth: '600px', width: '90%', maxHeight: '90vh', overflowY: 'auto' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h3 style={{ margin: 0 }}>Lawyer Details</h3>
+                            <button onClick={() => setDetailModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                        </div>
+                        <div style={{ display: 'grid', gap: '15px' }}>
+                            <div style={{ display: 'flex', gap: '20px', alignItems: 'center', paddingBottom: '20px', borderBottom: '1px solid #f1f5f9' }}>
+                                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: 'bold' }}>
+                                    {selectedLawyer.name ? selectedLawyer.name.charAt(0) : 'L'}
+                                </div>
+                                <div>
+                                    <h4 style={{ margin: 0 }}>{selectedLawyer.name}</h4>
+                                    <p style={{ margin: '5px 0', color: '#64748b' }}>{selectedLawyer.email}</p>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <span style={{ fontSize: '0.85rem', padding: '4px 10px', background: selectedLawyer.isVerified ? '#dcfce7' : '#ffedd5', color: selectedLawyer.isVerified ? '#16a34a' : '#c2410c', borderRadius: '12px' }}>
+                                            {selectedLawyer.isVerified ? 'Verified' : 'Unverified'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <strong>License Number:</strong> {selectedLawyer.licenseNumber || 'Not Assigned'}
+                            </div>
+                            <div>
+                                <strong>Specialization:</strong> {selectedLawyer.specialization?.join(', ') || 'N/A'}
+                            </div>
+                            <div>
+                                <strong>Experience:</strong> {selectedLawyer.experienceYears} Years
+                            </div>
+                            <div>
+                                <strong>Location:</strong> {selectedLawyer.location || 'N/A'}
+                            </div>
+                            <div>
+                                <strong>Languages:</strong> {selectedLawyer.languages?.join(', ') || 'N/A'}
+                            </div>
+                            <div>
+                                <strong>Bio:</strong>
+                                <p style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', marginTop: '5px' }}>
+                                    {selectedLawyer.bio || 'No bio provided.'}
+                                </p>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '10px', paddingTop: '20px', borderTop: '1px solid #f1f5f9' }}>
+                                {!selectedLawyer.isVerified && (
+                                    <button onClick={() => { handleVerify(selectedLawyer._id); setDetailModalOpen(false); }} className="btn btn-primary" style={{ flex: 1 }}>Verify & Assign License</button>
+                                )}
+                                <button onClick={() => setDetailModalOpen(false)} className="btn btn-secondary" style={{ flex: 1 }}>Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Resource Creation Modal */}
+            {resourceModalOpen && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                    <div style={{ background: 'white', padding: '30px', borderRadius: '16px', maxWidth: '500px', width: '90%' }}>
+                        <h3 style={{ marginTop: 0 }}>Add New Resource</h3>
+                        <form onSubmit={handleCreateResource}>
+                            <div className="form-group">
+                                <label className="form-label">Title</label>
+                                <input name="title" required className="form-input" placeholder="Resource Title" />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Category</label>
+                                <select name="category" required className="form-select">
+                                    <option value="">Select Category</option>
+                                    <option value="Legal Guide">Legal Guide</option>
+                                    <option value="Template">Template</option>
+                                    <option value="Article">Article</option>
+                                    <option value="News">News</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Content (Optional)</label>
+                                <textarea name="content" className="form-input" rows="4" placeholder="Resource content..."></textarea>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">External URL (Optional)</label>
+                                <input name="url" className="form-input" placeholder="https://..." />
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Create Resource</button>
+                                <button type="button" onClick={() => setResourceModalOpen(false)} className="btn btn-secondary" style={{ flex: 1 }}>Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

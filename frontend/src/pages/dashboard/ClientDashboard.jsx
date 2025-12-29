@@ -152,7 +152,9 @@ const ClientDashboard = () => {
 
                 <p>Find lawyers and manage cases.</p>
                 <div className="action-bar">
-                    <button onClick={() => navigate('/lawyers')} className="btn btn-primary">Find a Lawyer</button>
+                    <button onClick={() => navigate('/cases/create')} className="btn btn-primary">Request Legal Assistance</button>
+                    <button onClick={() => navigate('/cases/my')} className="btn btn-outline-primary" style={{ background: 'white' }}>My Case History</button>
+                    <button onClick={() => navigate('/lawyers')} className="btn btn-secondary">Find a Lawyer</button>
                     <button onClick={() => navigate('/resources')} className="btn btn-secondary">Legal Resources</button>
                 </div>
             </div>

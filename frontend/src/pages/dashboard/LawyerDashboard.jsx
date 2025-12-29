@@ -11,6 +11,8 @@ const LawyerDashboard = () => {
     const [user, setUser] = useState(JSON.parse(sessionStorage.getItem('user') || '{}'));
     const [isUploading, setIsUploading] = useState(false);
     const { addToast } = useToast();
+    const [lawyerProfile, setLawyerProfile] = useState(null);
+
 
     // Modal State
     const [modalOpen, setModalOpen] = useState(false);
@@ -26,6 +28,22 @@ const LawyerDashboard = () => {
         setModalConfig({ onConfirm: action, title, message });
         setModalOpen(true);
     };
+
+    React.useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const token = sessionStorage.getItem('token');
+                const res = await axios.get('http://localhost:5000/api/lawyers/profile/me', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setLawyerProfile(res.data);
+            } catch (err) {
+                console.error("Failed to fetch lawyer profile", err);
+            }
+        };
+        fetchProfile();
+    }, []);
+
 
     const handleFileChange = async (e) => {
         const file = e.target.files[0];
@@ -110,6 +128,33 @@ const LawyerDashboard = () => {
 
                     </div>
                 </div>
+
+                {/* Verification Status Card */}
+                <div style={{ background: '#fff', padding: '20px', borderRadius: '12px', marginBottom: '24px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h4 style={{ margin: '0 0 5px 0', color: '#1e293b' }}>Professional Verification</h4>
+                        <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>
+                            {lawyerProfile?.isVerified
+                                ? "Your profile is verified. You are a trusted partner."
+                                : "Your profile is currently under review by the administration."}
+                        </p>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{
+                            background: lawyerProfile?.isVerified ? '#dcfce7' : '#fffbeb',
+                            color: lawyerProfile?.isVerified ? '#16a34a' : '#b45309',
+                            padding: '6px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', display: 'inline-block', marginBottom: '4px'
+                        }}>
+                            {lawyerProfile?.isVerified ? "Verified" : "Pending Verification"}
+                        </div>
+                        {lawyerProfile?.isVerified && lawyerProfile?.licenseNumber && (
+                            <div style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '500' }}>
+                                License: {lawyerProfile.licenseNumber}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
 
                 <p>Manage your cases and client requests here.</p>
                 <div className="action-bar">

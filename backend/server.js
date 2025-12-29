@@ -21,6 +21,7 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/auth', require('./features/auth/auth.routes'));
 app.use('/api/lawyers', require('./features/lawyers/lawyer.routes'));
 app.use('/api/resources', require('./features/resources/resource.routes'));
+app.use('/api/cases', require('./features/cases/case.routes'));
 
 // Root
 app.get('/', (req, res) => {

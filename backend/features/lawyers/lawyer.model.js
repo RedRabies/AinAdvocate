@@ -16,6 +16,7 @@ const lawyerSchema = new mongoose.Schema({
     languages: [{ type: String }],
     specialization: [{ type: String }],
     licenseNumber: { type: String, required: true },
+    isEmailVerified: { type: Boolean, default: false }, // OTP verification
     isVerified: { type: Boolean, default: false }, // Admin verification for practice
     isBanned: { type: Boolean, default: false },
     rating: { type: Number, default: 0 },

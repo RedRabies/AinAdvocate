@@ -23,7 +23,8 @@ const VerifyOTP = () => {
                 const role = res.data.user.role;
                 if (role === 'lawyer') navigate('/lawyer-dashboard');
                 else if (role === 'admin') navigate('/admin-dashboard');
-                else navigate('/dashboard');
+                else if (role === 'client') navigate('/client-dashboard'); // Ensure Clients go to their dashboard
+                else navigate('/client-dashboard');
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Verification failed');
