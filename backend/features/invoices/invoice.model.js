@@ -20,6 +20,10 @@ const invoiceSchema = new mongoose.Schema({
         email: String,
         address: String
     },
+    payee: {
+        name: String,
+        email: String
+    },
     issuedBy: { // Lawyer Name/Firm snapshot
         name: String,
         firm: String

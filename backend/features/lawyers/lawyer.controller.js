@@ -8,7 +8,7 @@ const { matchLawyers } = require('../../shared/utils/matchmaking.service');
 
 exports.createOrUpdateProfile = async (req, res) => {
     // Lawyer can update details BUT NOT licenseNumber directly (Assigned by Admin)
-    const { bio, experienceYears, location, languages, specialization } = req.body;
+    const { bio, experienceYears, location, languages, categories, specialization } = req.body;
     try {
         let lawyer = await Lawyer.findById(req.user.id);
         if (lawyer) {
@@ -17,7 +17,15 @@ exports.createOrUpdateProfile = async (req, res) => {
             lawyer.experienceYears = experienceYears || lawyer.experienceYears;
             lawyer.location = location || lawyer.location;
             lawyer.languages = languages || lawyer.languages;
-            lawyer.specialization = specialization || lawyer.specialization;
+
+            // Update categories and sync to specialization
+            if (categories) {
+                lawyer.categories = categories;
+                lawyer.specialization = categories; // Sync as requested
+            } else if (specialization) {
+                lawyer.specialization = specialization;
+            }
+
             // lawyer.licenseNumber = licenseNumber; // REMOVED: Lawyers cannot self-assign/edit license
             await lawyer.save();
             return res.json(lawyer);
@@ -30,10 +38,13 @@ exports.createOrUpdateProfile = async (req, res) => {
 };
 
 exports.getProfile = async (req, res) => {
-    // req.user is already populated by verifyToken middleware (and passwordHash excluded)
-    // Returning it directly saves a DB call and avoids potential lookup errors
-    if (!req.user) return res.status(404).json({ message: 'Profile not found' });
-    res.json(req.user);
+    try {
+        const lawyer = await Lawyer.findById(req.user.id).select('-passwordHash');
+        if (!lawyer) return res.status(404).json({ message: 'Profile not found' });
+        res.json(lawyer);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 };
 
 exports.getLawyerById = async (req, res) => {

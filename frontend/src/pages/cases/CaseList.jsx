@@ -6,6 +6,15 @@ import '../../styles/pages/dashboard.css'; // Reuse dashboard styles for cards
 const CaseList = () => {
     const [cases, setCases] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [category, setCategory] = useState('');
+
+    const filteredCases = cases.filter(c => {
+        const matchesSearch = c.title.toLowerCase().includes(search.toLowerCase()) ||
+            c.description.toLowerCase().includes(search.toLowerCase());
+        const matchesCategory = category ? c.category === category : true;
+        return matchesSearch && matchesCategory;
+    });
 
     useEffect(() => {
         const fetchCases = async () => {
@@ -31,11 +40,33 @@ const CaseList = () => {
                 <p>Browse cases posted by clients looking for legal representation.</p>
             </div>
 
-            {cases.length === 0 ? (
-                <p>No open cases found at the moment.</p>
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' }}>
+                <input
+                    type="text"
+                    placeholder="Search cases..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="form-input"
+                    style={{ flex: 1, padding: '10px' }}
+                />
+                <select
+                    value={category}
+                    onChange={e => setCategory(e.target.value)}
+                    className="form-select"
+                    style={{ width: '200px', padding: '10px' }}
+                >
+                    <option value="">All Categories</option>
+                    {['Family Law', 'Criminal Law', 'Property Law', 'Corporate Law', 'Civil Litigation', 'Other'].map(c => (
+                        <option key={c} value={c}>{c}</option>
+                    ))}
+                </select>
+            </div>
+
+            {filteredCases.length === 0 ? (
+                <p>No open cases found matching your criteria.</p>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-                    {cases.map((c) => (
+                    {filteredCases.map((c) => (
                         <div key={c._id} className="card case-card" style={{ padding: '20px', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#fff' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                                 <span className={`badge badge-${c.urgency?.toLowerCase() || 'medium'}`}

@@ -33,14 +33,20 @@ import EditCase from './pages/cases/EditCase';
 import CaseInbox from './pages/lawyer/CaseInbox';
 import MyLawyerCases from './pages/lawyer/MyLawyerCases';
 import MyClients from './pages/lawyer/MyClients';
+
 import CaseChat from './pages/chat/CaseChat';
+import LawyerCaseList from './pages/lawyer/LawyerCaseList';
+import MyApplications from './pages/lawyer/MyApplications';
 
 
 
 
 
+import InvoicePDF from './components/payment/InvoicePDF';
 import Header from './components/common/Header';
 import Footer from './components/common/Footer';
+
+
 
 // Protected Route Wrapper (Simplistic)
 // Protected Route Wrapper (Simplistic)
@@ -91,6 +97,10 @@ function App() {
               <Route path="/clients" element={<PrivateRoute><MyClients /></PrivateRoute>} />
 
               <Route path="/lawyer/cases" element={<PrivateRoute><MyLawyerCases /></PrivateRoute>} />
+              <Route path="/lawyer/applications" element={<PrivateRoute><MyApplications /></PrivateRoute>} />
+              <Route path="/find-cases" element={<PrivateRoute><LawyerCaseList /></PrivateRoute>} />
+
+              <Route path="/invoices/print/:id" element={<PrivateRoute><InvoicePDF /></PrivateRoute>} />
             </Routes>
           </div>
           <Footer />

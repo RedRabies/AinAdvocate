@@ -7,6 +7,7 @@ const LawyerDetails = () => {
     const { id } = useParams();
     const [lawyer, setLawyer] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [imgError, setImgError] = useState(false);
 
     useEffect(() => {
         const fetchLawyer = async () => {
@@ -44,13 +45,16 @@ const LawyerDetails = () => {
                         fontSize: '2.5rem',
                         fontWeight: 'bold',
                         color: '#4a5568',
-                        marginRight: '30px'
+                        marginRight: '30px',
+                        flexShrink: 0,
+                        overflow: 'hidden'
                     }}>
-                        {lawyer.profileImage ? (
+                        {lawyer.profileImage && !imgError ? (
                             <img
                                 src={`http://localhost:5000${lawyer.profileImage}`}
                                 alt={lawyer.name}
-                                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                onError={() => setImgError(true)}
                             />
                         ) : (
                             lawyer.name ? lawyer.name.charAt(0).toUpperCase() : 'L'

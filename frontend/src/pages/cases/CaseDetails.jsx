@@ -6,6 +6,9 @@ import CaseActions from '../../components/cases/CaseActions';
 import { useToast } from '../../components/common/Toast';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 
+import { createReview } from '../../services/review.service';
+import PaymentForm from '../../components/payment/PaymentForm';
+
 const CaseDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -13,6 +16,11 @@ const CaseDetails = () => {
     const [caseItem, setCaseItem] = useState(null);
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
+
+    // Review State
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [reviewData, setReviewData] = useState({ rating: 5, comment: '' });
+    const userRole = JSON.parse(sessionStorage.getItem('user') || '{}').role;
 
     useEffect(() => {
         loadCase();
@@ -47,6 +55,51 @@ const CaseDetails = () => {
             addToast(err.response?.data?.message || 'Failed to cancel case', 'error');
         } finally {
             setModalOpen(false);
+        }
+    };
+
+    const handleSubmitReview = async (e) => {
+        e.preventDefault();
+        try {
+            await createReview({
+                caseId: id,
+                lawyerId: caseItem.assignedLawyerId._id,
+                rating: parseInt(reviewData.rating),
+                comment: reviewData.comment
+            });
+            addToast('Review submitted successfully!', 'success');
+            setShowReviewModal(false);
+        } catch (err) {
+            addToast(err.response?.data?.message || 'Failed to submit review', 'error');
+        }
+    };
+
+    // Payment State
+    const [showPayModal, setShowPayModal] = useState(false);
+    const [paymentAmount, setPaymentAmount] = useState('');
+    const [processingPayment, setProcessingPayment] = useState(false);
+
+    const handlePayment = async (e) => {
+        e.preventDefault();
+        setProcessingPayment(true);
+        try {
+            const token = sessionStorage.getItem('token');
+            // Using the mock payment endpoint
+            const res = await import('axios').then(a => a.default.post('http://localhost:5000/api/payments/process', {
+                caseId: id,
+                amount: parseFloat(paymentAmount),
+                lawyerId: caseItem.assignedLawyerId._id
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            }));
+
+            addToast('Payment successful! Case is now In Progress.', 'success');
+            setShowPayModal(false);
+            loadCase(); // Refresh status
+        } catch (err) {
+            addToast(err.response?.data?.message || 'Payment failed', 'error');
+        } finally {
+            setProcessingPayment(false);
         }
     };
 
@@ -99,20 +152,36 @@ const CaseDetails = () => {
 
                 <CaseTimeline history={caseItem.statusHistory} />
 
+                {/* Communication & Actions */}
                 <div style={{ marginTop: '20px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                    <h4 style={{ margin: '0 0 10px 0', fontSize: '1rem', color: '#1e293b' }}>Communication & Actions</h4>
-                    <Link to={`/cases/${id}/communicate`} style={{
-                        display: 'inline-block',
-                        background: '#3b82f6',
-                        color: 'white',
-                        padding: '10px 20px',
-                        borderRadius: '6px',
-                        textDecoration: 'none',
-                        fontWeight: '600',
-                        marginRight: '10px'
-                    }}>
-                        💬 Open Chat & Appointments
-                    </Link>
+                    <h4 style={{ margin: '0 0 10px 0', fontSize: '1rem', color: '#1e293b' }}>Actions</h4>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <Link to={`/cases/${id}/communicate`} className="btn btn-primary" style={{ textDecoration: 'none' }}>
+                            💬 Open Chat & Appointments
+                        </Link>
+
+                        {/* Payment Button for Assigned Cases (Client Only) */}
+                        {userRole === 'client' && caseItem.status === 'ASSIGNED' && (
+                            <button
+                                onClick={() => setShowPayModal(true)}
+                                className="btn"
+                                style={{ background: '#10b981', color: 'white', border: 'none' }}
+                            >
+                                💳 Make Payment
+                            </button>
+                        )}
+
+                        {/* Review Button for Closed Cases */}
+                        {userRole === 'client' && caseItem.status === 'CLOSED' && (
+                            <button
+                                onClick={() => setShowReviewModal(true)}
+                                className="btn"
+                                style={{ background: '#f59e0b', color: 'white', border: 'none' }}
+                            >
+                                ★ Rate Lawyer
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <CaseActions
@@ -129,6 +198,76 @@ const CaseDetails = () => {
                 title="Cancel Case Request"
                 message="Are you sure you want to cancel this case request? This action cannot be undone."
             />
+
+            {/* Payment Modal */}
+            {showPayModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+                }}>
+                    <div style={{ background: 'white', padding: '10px', borderRadius: '12px', width: '90%', maxWidth: '500px', position: 'relative' }}>
+                        <button
+                            onClick={() => setShowPayModal(false)}
+                            style={{ position: 'absolute', right: '15px', top: '15px', border: 'none', background: 'none', fontSize: '1.5rem', cursor: 'pointer', zIndex: 10 }}
+                        >
+                            &times;
+                        </button>
+                        <PaymentForm
+                            caseId={id}
+                            currentUser={{ role: userRole }}
+                            onSuccess={() => {
+                                setShowPayModal(false);
+                                loadCase();
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Review Modal */}
+            {showReviewModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+                }}>
+                    <div style={{ background: 'white', padding: '30px', borderRadius: '12px', width: '90%', maxWidth: '500px' }}>
+                        <h3 style={{ marginTop: 0 }}>Rate Your Experience</h3>
+                        <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
+                            How was your experience working with {caseItem.assignedLawyerId?.name}?
+                        </p>
+                        <form onSubmit={handleSubmitReview}>
+                            <div className="form-group">
+                                <label className="form-label">Rating</label>
+                                <div style={{ display: 'flex', gap: '10px', fontSize: '1.5rem', cursor: 'pointer' }}>
+                                    {[1, 2, 3, 4, 5].map(star => (
+                                        <span
+                                            key={star}
+                                            onClick={() => setReviewData({ ...reviewData, rating: star })}
+                                            style={{ color: star <= reviewData.rating ? '#f59e0b' : '#cbd5e1' }}
+                                        >
+                                            ★
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Comment</label>
+                                <textarea
+                                    className="form-input"
+                                    rows="4"
+                                    placeholder="Share your feedback..."
+                                    value={reviewData.comment}
+                                    onChange={(e) => setReviewData({ ...reviewData, comment: e.target.value })}
+                                />
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Submit Review</button>
+                                <button type="button" onClick={() => setShowReviewModal(false)} className="btn btn-secondary" style={{ flex: 1 }}>Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

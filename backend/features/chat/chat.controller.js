@@ -14,18 +14,37 @@ exports.getMessages = async (req, res) => {
     }
 };
 
+const Notification = require('../notifications/notification.model');
+
+// ...
+
 // Send a message
 exports.sendMessage = async (req, res) => {
     try {
         const { caseId } = req.params;
         const { message, files } = req.body;
         const senderId = req.user.id;
-        const senderRole = req.user.role; // Assuming middleware populates this
+        const senderRole = req.user.role;
 
-        // Verify case access (Optional but good)
-        // const kase = await Case.findById(caseId);
-        // if (!kase) return res.status(404).json({ msg: 'Case not found' });
-        // Check if user is lawyer or client of this case...
+        // Verify case access & Identify Recipient
+        const caseItem = await Case.findById(caseId);
+        if (!caseItem) return res.status(404).json({ msg: 'Case not found' });
+
+        // Determine recipient
+        let recipientId;
+        if (senderRole === 'client') {
+            recipientId = caseItem.assignedLawyerId;
+        } else if (senderRole === 'lawyer') {
+            recipientId = caseItem.clientId;
+        }
+
+        // Only allow if involved
+        const isClient = caseItem.clientId.toString() === senderId;
+        const isLawyer = caseItem.assignedLawyerId && caseItem.assignedLawyerId.toString() === senderId;
+
+        if (!isClient && !isLawyer && senderRole !== 'admin') {
+            return res.status(403).json({ message: 'Access denied' });
+        }
 
         const newChat = new Chat({
             caseId,
@@ -44,9 +63,19 @@ exports.sendMessage = async (req, res) => {
         try {
             const io = getIo();
             io.to(caseId).emit('receive_message', savedChat);
+
+            // Send Notification to Recipient
+            if (recipientId) {
+                await Notification.create({
+                    userId: recipientId,
+                    type: 'INFO',
+                    message: `New message from ${req.user.name}`,
+                    relatedId: caseId,
+                    link: `/cases/${caseId}/communicate`
+                });
+            }
         } catch (socketErr) {
-            console.error("Socket emit failed:", socketErr.message);
-            // Don't fail the request if socket fails
+            console.error("Socket/Notification failed:", socketErr.message);
         }
 
         res.json(savedChat);

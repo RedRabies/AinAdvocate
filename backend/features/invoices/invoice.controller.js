@@ -1,5 +1,16 @@
 const Invoice = require('./invoice.model');
 
+exports.getInvoiceById = async (req, res) => {
+    try {
+        const invoice = await Invoice.findById(req.params.id);
+        if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
+        res.json(invoice);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+};
+
 exports.getInvoices = async (req, res) => {
     try {
         // If lawyer -> issuedBy, if client -> issuedTo... slightly complex query if by ID

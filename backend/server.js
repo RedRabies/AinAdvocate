@@ -7,7 +7,6 @@ const connectDB = require('./shared/config/db');
 dotenv.config();
 
 // Connect to Database
-// Connect to Database
 connectDB();
 
 // Register Models (Order Matters)
@@ -33,15 +32,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
 // Routes
-// Routes
 app.use('/api/auth', require('./features/auth/auth.routes'));
 app.use('/api/lawyers', require('./features/lawyers/lawyer.routes'));
 app.use('/api/resources', require('./features/resources/resource.routes'));
 app.use('/api/cases', require('./features/cases/case.routes'));
 app.use('/api/chat', require('./features/chat/chat.routes'));
 app.use('/api/appointments', require('./features/appointments/appointment.routes'));
+
 app.use('/api/payments', require('./features/payments/payment.routes'));
 app.use('/api/invoices', require('./features/invoices/invoice.routes'));
+
+// New Features (Sprint 5)
+app.use('/api/admin', require('./features/admin/admin.routes'));
+app.use('/api/reviews', require('./features/reviews/review.routes'));
+app.use('/api/notifications', require('./features/notifications/notification.routes'));
 
 
 
@@ -53,9 +57,6 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
   res.send('Backend running');
 });
-
-// Error handling middleware
-
 
 // Error handling middleware
 app.use((err, req, res, next) => {

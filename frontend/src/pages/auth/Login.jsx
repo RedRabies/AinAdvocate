@@ -12,6 +12,17 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  React.useEffect(() => {
+    const token = sessionStorage.getItem('token');
+    const userStr = sessionStorage.getItem('user');
+    if (token && userStr) {
+      const user = JSON.parse(userStr);
+      if (user.role === 'lawyer') navigate('/lawyer-dashboard');
+      else if (user.role === 'admin') navigate('/admin-dashboard');
+      else navigate('/client-dashboard');
+    }
+  }, [navigate]);
+
   const handle = e => setForm({ ...form, [e.target.name]: e.target.value });
 
   const submit = async e => {

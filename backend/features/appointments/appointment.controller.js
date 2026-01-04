@@ -1,5 +1,6 @@
 const Appointment = require('./appointment.model');
 const Case = require('../cases/case.model');
+const Notification = require('../notifications/notification.model');
 
 // Request an appointment
 exports.requestAppointment = async (req, res) => {
@@ -28,6 +29,16 @@ exports.requestAppointment = async (req, res) => {
         });
 
         const savedAppointment = await appointment.save();
+
+        // Notify Lawyer
+        await Notification.create({
+            userId: lawyerId,
+            type: 'INFO',
+            message: `New appointment request from ${req.user.name}`,
+            relatedId: savedAppointment._id,
+            link: `/lawyer-dashboard`
+        });
+
         res.json(savedAppointment);
     } catch (err) {
         console.error(err.message);
@@ -86,6 +97,16 @@ exports.updateStatus = async (req, res) => {
         if (reason) appointment.reason = reason;
 
         await appointment.save();
+
+        // Notify Client
+        await Notification.create({
+            userId: appointment.clientId,
+            type: status === 'CONFIRMED' ? 'SUCCESS' : 'WARNING',
+            message: `Your appointment status was updated to: ${status}`,
+            relatedId: appointment._id,
+            link: `/client-dashboard`
+        });
+
         res.json(appointment);
     } catch (err) {
         console.error(err.message);

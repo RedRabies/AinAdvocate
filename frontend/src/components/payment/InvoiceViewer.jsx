@@ -42,8 +42,12 @@ const InvoiceViewer = ({ caseId }) => {
                             </div>
                             <div style={{ textAlign: 'right' }}>
                                 <p className="invoice-amount">৳{inv.amount}</p>
-                                <button className="download-link" style={{ border: 'none', cursor: 'pointer', marginTop: '4px' }}>
-                                    ⬇ Download
+                                <button
+                                    className="download-link"
+                                    style={{ border: 'none', cursor: 'pointer', marginTop: '4px', background: 'none', color: '#3b82f6', fontWeight: 'bold' }}
+                                    onClick={() => window.open(`/invoices/print/${inv._id}`, '_blank')}
+                                >
+                                    📄 Download PDF
                                 </button>
                             </div>
                         </div>

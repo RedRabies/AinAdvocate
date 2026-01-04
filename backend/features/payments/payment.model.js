@@ -23,6 +23,14 @@ const paymentSchema = new mongoose.Schema({
         type: String,
         default: 'USD'
     },
+    platformFee: {
+        type: Number,
+        default: 0
+    },
+    lawyerEarn: {
+        type: Number,
+        default: 0
+    },
     status: {
         type: String,
         enum: ['PENDING', 'COMPLETED', 'FAILED'],

@@ -1,4 +1,4 @@
-const API_BASE = '/api/resources';
+const API_BASE = 'http://localhost:5000/api/resources';
 
 const getHeaders = () => {
     const token = sessionStorage.getItem('token');

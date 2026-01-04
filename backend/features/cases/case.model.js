@@ -4,6 +4,7 @@ const caseSchema = new mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
     category: { type: String, required: true },
+    budget: { type: Number, default: 0 },
     urgency: {
         type: String,
         enum: ['LOW', 'MEDIUM', 'HIGH'],
@@ -11,8 +12,8 @@ const caseSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['PENDING', 'ACCEPTED', 'IN_PROGRESS', 'CLOSED', 'CANCELLED', 'REJECTED'],
-        default: 'PENDING'
+        enum: ['OPEN', 'ASSIGNED', 'IN_PROGRESS', 'CLOSED', 'CANCELLED'],
+        default: 'OPEN'
     },
     statusHistory: [{
         status: { type: String, required: true },

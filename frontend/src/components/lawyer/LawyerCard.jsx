@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import '../../styles/components/card.css';
 import '../../styles/components/button.css';
 
 const LawyerCard = ({ lawyer }) => {
+    const [imgError, setImgError] = useState(false);
     return (
         <div className="card" style={{ padding: '24px', transition: 'transform 0.2s', border: '1px solid #f1f5f9' }}>
             {/* Header: Photo and Name */}
@@ -23,11 +24,12 @@ const LawyerCard = ({ lawyer }) => {
                     marginRight: '16px',
                     flexShrink: 0
                 }}>
-                    {lawyer.profileImage ? (
+                    {lawyer.profileImage && !imgError ? (
                         <img
                             src={`http://localhost:5000${lawyer.profileImage}`}
                             alt={lawyer.name}
                             style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                            onError={() => setImgError(true)}
                         />
                     ) : (
                         lawyer.name ? lawyer.name.charAt(0).toUpperCase() : 'L'

@@ -54,12 +54,18 @@ const MyLawyerCases = () => {
                                 </div>
                                 <p>Client: {item.clientId?.name || 'Unknown'}</p>
                                 <p>{item.description}</p>
+                                {item.budget > 0 && <p style={{ fontWeight: 'bold', color: '#10b981' }}>Budget/Fee: ৳{item.budget}</p>}
                                 <div style={{ marginTop: '10px' }}>
                                     <Link to={`/cases/${item._id}/communicate`} className="btn" style={{
                                         background: '#3b82f6', color: 'white', textDecoration: 'none',
-                                        display: 'inline-block', padding: '6px 12px', borderRadius: '4px', fontSize: '0.9rem'
+                                        display: 'inline-block', padding: '6px 12px', borderRadius: '4px', fontSize: '0.9rem', marginRight: '10px'
                                     }}>
                                         💬 Open Chat & Actions
+                                    </Link>
+                                    <Link to={`/cases/${item._id}`} className="btn btn-outline-primary" style={{
+                                        textDecoration: 'none', display: 'inline-block', padding: '6px 12px', borderRadius: '4px', fontSize: '0.9rem'
+                                    }}>
+                                        View Details
                                     </Link>
                                 </div>
                             </div>

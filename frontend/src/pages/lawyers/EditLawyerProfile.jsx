@@ -11,6 +11,7 @@ const EditLawyerProfile = () => {
         experienceYears: 0,
         location: '',
         licenseNumber: '',
+        categories: [], // Array for checkboxes
         specialization: '', // Comma separated for input
         languages: '' // Comma separated for input
     });
@@ -29,6 +30,7 @@ const EditLawyerProfile = () => {
                     experienceYears: data.experienceYears || 0,
                     location: data.location || '',
                     licenseNumber: data.licenseNumber || '',
+                    categories: data.categories || [],
                     specialization: data.specialization ? data.specialization.join(', ') : '',
                     languages: data.languages ? data.languages.join(', ') : ''
                 });
@@ -42,6 +44,7 @@ const EditLawyerProfile = () => {
         e.preventDefault();
         const payload = {
             ...formData,
+            categories: formData.categories,
             specialization: formData.specialization.split(',').map(s => s.trim()).filter(Boolean),
             languages: formData.languages.split(',').map(s => s.trim()).filter(Boolean)
         };
@@ -91,14 +94,27 @@ const EditLawyerProfile = () => {
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Specializations (comma separated)</label>
-                        <input
-                            value={formData.specialization}
-                            onChange={e => setFormData({ ...formData, specialization: e.target.value })}
-                            placeholder="e.g. Family Law, Criminal Defense"
-                            className="form-input"
-                        />
+                        <label className="form-label">Practice Categories (for Case Matching)</label>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', background: '#f8fafc', padding: '15px', borderRadius: '8px' }}>
+                            {['Family Law', 'Criminal Law', 'Property Law', 'Corporate Law', 'Civil Litigation', 'Other'].map(cat => (
+                                <label key={cat} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '8px' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.categories.includes(cat)}
+                                        onChange={e => {
+                                            const newCats = e.target.checked
+                                                ? [...formData.categories, cat]
+                                                : formData.categories.filter(c => c !== cat);
+                                            setFormData({ ...formData, categories: newCats });
+                                        }}
+                                    />
+                                    {cat}
+                                </label>
+                            ))}
+                        </div>
                     </div>
+
+                    {/* Removed Additional Specialization Input as per user request to use Categories as Specialization */}
 
                     <div className="form-group">
                         <label className="form-label">Languages (comma separated)</label>

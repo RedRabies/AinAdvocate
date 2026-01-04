@@ -37,10 +37,20 @@ const getInvoices = async (token, caseId = null) => {
     return response.data;
 };
 
+// Get Single Invoice
+const getInvoiceById = async (token, id) => {
+    const config = {
+        headers: { Authorization: `Bearer ${token}` }
+    };
+    const response = await axios.get(`${INV_URL}/${id}`, config);
+    return response.data;
+};
+
 const paymentService = {
     processPayment,
     getPayments,
-    getInvoices
+    getInvoices,
+    getInvoiceById
 };
 
 export default paymentService;

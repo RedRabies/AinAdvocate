@@ -14,6 +14,7 @@ const lawyerSchema = new mongoose.Schema({
     experienceYears: { type: Number, default: 0 },
     location: { type: String },
     languages: [{ type: String }],
+    categories: [{ type: String }], // e.g. ["Family", "Criminal"]
     specialization: [{ type: String }],
     licenseNumber: { type: String, required: true },
     isEmailVerified: { type: Boolean, default: false }, // OTP verification

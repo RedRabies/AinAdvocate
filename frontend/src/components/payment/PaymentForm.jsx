@@ -3,28 +3,66 @@ import React, { useState, useEffect } from 'react';
 import paymentService from '../../services/payment.service';
 import '../../styles/components/payment.css';
 
-const PaymentForm = ({ caseId, currentUser }) => {
+const PaymentForm = ({ caseId, currentUser, onSuccess }) => {
     const [amount, setAmount] = useState('');
     const [bkashNumber, setBkashNumber] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isFixed, setIsFixed] = useState(false);
+    const [alreadyPaid, setAlreadyPaid] = useState(false);
+
+    useEffect(() => {
+        // Fetch case details to get agreed amount
+        const fetchCaseInfo = async () => {
+            try {
+                const token = sessionStorage.getItem('token');
+                // We'll use the public or protected view route to get just the budget/status
+                const res = await import('axios').then(a => a.default.get(`http://localhost:5000/api/cases/${caseId}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                }));
+                const c = res.data;
+                if (c.budget && c.budget > 0) {
+                    setAmount(c.budget);
+                    setIsFixed(true);
+                }
+                if (c.status === 'IN_PROGRESS' || c.status === 'CLOSED') {
+                    setAlreadyPaid(true);
+                }
+            } catch (err) {
+                console.error("Failed to load case info for payment", err);
+            }
+        };
+        fetchCaseInfo();
+    }, [caseId]);
 
     // Lawyers don't see the payment form
     if (currentUser?.role === 'lawyer') return null;
+
+    if (alreadyPaid) {
+        return (
+            <div className="payment-container glass-card" style={{ borderTop: '4px solid #10b981', textAlign: 'center', padding: '40px' }}>
+                <h3 style={{ color: '#10b981' }}>Payment Complete ✅</h3>
+                <p>You have already paid for this case.</p>
+            </div>
+        );
+    }
 
     const handlePayment = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
             const token = sessionStorage.getItem('token') || localStorage.getItem('token');
-            // Mock payment processing including bkash number logic if needed by backend
-            await paymentService.processPayment({ caseId, amount: Number(amount), method: 'Bkash', phone: bkashNumber }, token);
+            await paymentService.processPayment({
+                caseId,
+                amount: Number(amount),
+                method: 'Bkash',
+                phone: bkashNumber
+            }, token);
             alert("Payment Successful! Invoice generated.");
-            setAmount('');
-            setBkashNumber('');
-            // Trigger refresh if needed
+            setAlreadyPaid(true);
+            if (onSuccess) onSuccess();
         } catch (error) {
             console.error("Payment failed", error);
-            alert("Payment failed");
+            alert(error.response?.data?.message || "Payment failed");
         } finally {
             setLoading(false);
         }
@@ -61,9 +99,11 @@ const PaymentForm = ({ caseId, currentUser }) => {
                         min="1"
                         className="payment-input"
                         value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
+                        onChange={(e) => !isFixed && setAmount(e.target.value)}
                         placeholder="0.00"
                         required
+                        readOnly={isFixed}
+                        style={{ backgroundColor: isFixed ? '#f1f5f9' : 'white', cursor: isFixed ? 'not-allowed' : 'text' }}
                     />
                 </div>
 
