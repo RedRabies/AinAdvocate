@@ -1,5 +1,9 @@
 const Lawyer = require('./lawyer.model');
+const Case = require('../cases/case.model');
 const User = require('../users/user.model');
+require('../users/client.model'); // Ensure Client model is registered
+
+
 const { matchLawyers } = require('../../shared/utils/matchmaking.service');
 
 exports.createOrUpdateProfile = async (req, res) => {
@@ -26,13 +30,10 @@ exports.createOrUpdateProfile = async (req, res) => {
 };
 
 exports.getProfile = async (req, res) => {
-    try {
-        const lawyer = await Lawyer.findById(req.user.id);
-        if (!lawyer) return res.status(404).json({ message: 'Profile not found' });
-        res.json(lawyer);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
+    // req.user is already populated by verifyToken middleware (and passwordHash excluded)
+    // Returning it directly saves a DB call and avoids potential lookup errors
+    if (!req.user) return res.status(404).json({ message: 'Profile not found' });
+    res.json(req.user);
 };
 
 exports.getLawyerById = async (req, res) => {
@@ -42,6 +43,31 @@ exports.getLawyerById = async (req, res) => {
         res.json(lawyer);
     } catch (err) {
         res.status(500).json({ message: err.message });
+    }
+};
+
+
+
+
+exports.getMyClients = async (req, res, next) => {
+    try {
+        // Find all cases where this lawyer is assigned
+        const cases = await Case.find({ assignedLawyerId: req.user._id })
+            .populate('clientId', 'name email phone address bio profileImage')
+            .select('clientId');
+
+        // Extract unique clients
+        const clientsMap = new Map();
+        cases.forEach(c => {
+            if (c.clientId && c.clientId._id) {
+                clientsMap.set(c.clientId._id.toString(), c.clientId);
+            }
+        });
+
+        const uniqueClients = Array.from(clientsMap.values());
+        res.json(uniqueClients);
+    } catch (err) {
+        next(err);
     }
 };
 

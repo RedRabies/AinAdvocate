@@ -38,6 +38,27 @@ export const getAssignedCases = async () => {
     return res.data;
 };
 
+export const getCaseInbox = async (specialization = '') => {
+    const query = specialization ? `?specialization=${specialization}` : '';
+    const res = await axios.get(`${API_BASE}/inbox${query}`, { headers: getHeaders() });
+    return res.data;
+};
+
+export const acceptCase = async (id) => {
+    const res = await axios.put(`${API_BASE}/${id}/accept`, {}, { headers: getHeaders() });
+    return res.data;
+};
+
+export const rejectCase = async (id) => {
+    const res = await axios.put(`${API_BASE}/${id}/reject`, {}, { headers: getHeaders() });
+    return res.data;
+};
+
+export const updateCaseStatus = async (id, status) => {
+    const res = await axios.put(`${API_BASE}/${id}/status`, { status }, { headers: getHeaders() });
+    return res.data;
+};
+
 // Lawyer Action
 export const addCaseNote = async (id, noteText) => {
     const res = await axios.post(`${API_BASE}/${id}/notes`, { noteText }, { headers: getHeaders() });

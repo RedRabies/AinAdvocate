@@ -11,7 +11,7 @@ const caseSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['PENDING', 'ACCEPTED', 'IN_PROGRESS', 'CLOSED', 'CANCELLED'],
+        enum: ['PENDING', 'ACCEPTED', 'IN_PROGRESS', 'CLOSED', 'CANCELLED', 'REJECTED'],
         default: 'PENDING'
     },
     statusHistory: [{
@@ -21,12 +21,12 @@ const caseSchema = new mongoose.Schema({
     }],
     clientId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'Client',
         required: true
     },
     assignedLawyerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'Lawyer',
         default: null
     },
     notes: [{

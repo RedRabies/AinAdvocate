@@ -3,7 +3,9 @@ const router = express.Router();
 const { check } = require('express-validator');
 const { verifyToken: protect } = require('../../shared/middlewares/auth.middleware');
 const { roleGuard: authorize } = require('../../shared/middlewares/role.middleware');
-const { createCase, getMyCases, getAssignedCases, addCaseNote } = require('./case.controller');
+const { createCase, getMyCases, getAssignedCases, addCaseNote, getPublicCases, getPublicCaseById } = require('./case.controller');
+
+
 
 // Client Routes
 router.post(
@@ -18,17 +20,24 @@ router.post(
     createCase
 );
 
+// Public Route
+router.get('/public', getPublicCases);
+router.get('/public/:id', getPublicCaseById);
+
+
+// Lawyer Routes - Specific
+router.get('/inbox', protect, authorize('lawyer'), require('./case.controller').getCaseInbox);
+router.get('/assigned', protect, authorize('lawyer'), getAssignedCases);
+
+// Client Routes - Specific
 router.get('/my', protect, authorize('client'), getMyCases);
 
-// Generic Protected Route (Role checks handled in controller)
+// Generic Protected Route (ID) - MUST BE LAST of the GETs
 router.get('/:id', protect, require('./case.controller').getCaseById);
 
-// Client Actions
-router.put('/:id', protect, authorize('client'), require('./case.controller').updateCase);
-router.delete('/:id', protect, authorize('client'), require('./case.controller').cancelCase);
-
-// Lawyer Routes
-router.get('/assigned', protect, authorize('lawyer'), getAssignedCases);
+router.put('/:id/accept', protect, authorize('lawyer'), require('./case.controller').acceptCase);
+router.put('/:id/reject', protect, authorize('lawyer'), require('./case.controller').rejectCase);
+router.put('/:id/status', protect, authorize('lawyer'), require('./case.controller').updateCaseStatus);
 
 router.post(
     '/:id/notes',

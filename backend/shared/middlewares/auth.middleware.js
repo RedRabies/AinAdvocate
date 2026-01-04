@@ -24,6 +24,7 @@ exports.verifyToken = async (req, res, next) => {
 
     if (!user) return res.status(401).json({ message: 'User not found' });
     if (user.isBanned) return res.status(403).json({ message: 'Account is banned' });
+
     req.user = user;
     next();
   } catch (err) {

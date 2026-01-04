@@ -23,9 +23,17 @@ import ResourceList from './pages/resources/ResourceList';
 import ResourceDetails from './pages/resources/ResourceDetails';
 
 import CreateCase from './pages/cases/CreateCase';
+import CaseList from './pages/cases/CaseList';
+import PublicCaseDetails from './pages/cases/PublicCaseDetails';
 import MyCases from './pages/cases/MyCases';
+
+
 import CaseDetails from './pages/cases/CaseDetails';
 import EditCase from './pages/cases/EditCase';
+import CaseInbox from './pages/lawyer/CaseInbox';
+import MyLawyerCases from './pages/lawyer/MyLawyerCases';
+import MyClients from './pages/lawyer/MyClients';
+
 
 import Header from './components/common/Header';
 import Footer from './components/common/Footer';
@@ -63,10 +71,21 @@ function App() {
               <Route path="/resources" element={<ResourceList />} />
               <Route path="/resources/:id" element={<ResourceDetails />} />
 
+
+
+              <Route path="/cases" element={<CaseList />} />
+              <Route path="/cases/view/:id" element={<PublicCaseDetails />} />
               <Route path="/cases/create" element={<PrivateRoute><CreateCase /></PrivateRoute>} />
+
+
               <Route path="/cases/my" element={<PrivateRoute><MyCases /></PrivateRoute>} />
               <Route path="/cases/:id" element={<PrivateRoute><CaseDetails /></PrivateRoute>} />
               <Route path="/cases/:id/edit" element={<PrivateRoute><EditCase /></PrivateRoute>} />
+
+              <Route path="/lawyer/inbox" element={<PrivateRoute><CaseInbox /></PrivateRoute>} />
+              <Route path="/clients" element={<PrivateRoute><MyClients /></PrivateRoute>} />
+
+              <Route path="/lawyer/cases" element={<PrivateRoute><MyLawyerCases /></PrivateRoute>} />
             </Routes>
           </div>
           <Footer />

@@ -7,7 +7,14 @@ const connectDB = require('./shared/config/db');
 dotenv.config();
 
 // Connect to Database
+// Connect to Database
 connectDB();
+
+// Register Models (Order Matters)
+require('./features/users/user.model');
+require('./features/users/client.model');
+require('./features/lawyers/lawyer.model');
+require('./features/cases/case.model');
 
 const app = express();
 
@@ -15,13 +22,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+
+
 app.use('/uploads', express.static('uploads'));
 
+// Routes
 // Routes
 app.use('/api/auth', require('./features/auth/auth.routes'));
 app.use('/api/lawyers', require('./features/lawyers/lawyer.routes'));
 app.use('/api/resources', require('./features/resources/resource.routes'));
 app.use('/api/cases', require('./features/cases/case.routes'));
+
+
 
 // Root
 app.get('/', (req, res) => {
@@ -33,9 +46,12 @@ app.get('/health', (req, res) => {
 });
 
 // Error handling middleware
+
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(`[Error] ${err.message}`);
+
   // hide stack in production if needed, but useful for dev
   res.status(err.statusCode || 500).json({
     message: err.message || 'Server Error',

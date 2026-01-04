@@ -39,3 +39,8 @@ export const getAllLawyersAdmin = async () => {
     const res = await axios.get(`${API_BASE}/admin/list`, { headers: getHeaders() });
     return res.data;
 };
+
+export const getMyClients = async () => {
+    const res = await axios.get(`${API_BASE}/my-clients`, { headers: getHeaders() });
+    return res.data;
+};

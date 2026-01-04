@@ -19,6 +19,7 @@ const Header = () => {
                 <Link to="/" className="logo">AinAdvocate</Link>
                 <nav className="nav-links">
                     <Link to="/lawyers">Find Lawyers</Link>
+                    <Link to="/cases">Cases</Link>
                     <Link to="/resources">Resources</Link>
                     {token ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
