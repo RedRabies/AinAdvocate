@@ -161,6 +161,7 @@ const LawyerDashboard = () => {
                     <button onClick={() => navigate('/lawyer/inbox')} className="btn btn-primary">Browse New Cases</button>
                     <button onClick={() => navigate('/lawyer/cases')} className="btn btn-outline-primary" style={{ background: 'white' }}>My Active Cases</button>
                     <button onClick={() => navigate('/clients')} className="btn btn-secondary">My Clients</button>
+                    <button onClick={() => navigate('/lawyers/edit')} className="btn btn-secondary">Edit Profile</button>
                     <button onClick={() => navigate('/resources/new')} className="btn btn-secondary">Share Resource</button>
                 </div>
             </div>

@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useToast } from '../../components/common/Toast';
 import { acceptCase } from '../../services/case.service';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
 import '../../styles/components/card.css';
 import '../../styles/components/button.css';
 
@@ -15,11 +16,15 @@ const PublicCaseDetails = () => {
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const user = JSON.parse(sessionStorage.getItem('user') || 'null');
 
-    const handleApply = async () => {
-        if (!window.confirm('Are you sure you want to apply for this case?')) return;
+    const handleApplyClick = () => {
+        setIsModalOpen(true);
+    };
+
+    const confirmApply = async () => {
         try {
             await acceptCase(id);
             addToast('Case accepted successfully!', 'success');
@@ -102,7 +107,7 @@ const PublicCaseDetails = () => {
                             <p style={{ color: '#64748b', marginBottom: '15px', fontSize: '0.95rem' }}>
                                 As a verified lawyer, you can apply to represent this client immediately.
                             </p>
-                            <button onClick={handleApply} className="btn btn-primary">
+                            <button onClick={handleApplyClick} className="btn btn-primary">
                                 Apply for Case
                             </button>
                         </>
@@ -121,6 +126,15 @@ const PublicCaseDetails = () => {
                     )}
                 </div>
             </div>
+
+            <ConfirmationModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onConfirm={confirmApply}
+                title="Confirm Application"
+                message="Are you sure you want to apply for this case? Once accepted, you will be assigned as the legal representative."
+                confirmText="Apply Now"
+            />
         </div>
     );
 };

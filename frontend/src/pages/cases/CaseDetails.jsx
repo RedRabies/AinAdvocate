@@ -99,6 +99,22 @@ const CaseDetails = () => {
 
                 <CaseTimeline history={caseItem.statusHistory} />
 
+                <div style={{ marginTop: '20px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <h4 style={{ margin: '0 0 10px 0', fontSize: '1rem', color: '#1e293b' }}>Communication & Actions</h4>
+                    <Link to={`/cases/${id}/communicate`} style={{
+                        display: 'inline-block',
+                        background: '#3b82f6',
+                        color: 'white',
+                        padding: '10px 20px',
+                        borderRadius: '6px',
+                        textDecoration: 'none',
+                        fontWeight: '600',
+                        marginRight: '10px'
+                    }}>
+                        💬 Open Chat & Appointments
+                    </Link>
+                </div>
+
                 <CaseActions
                     status={caseItem.status}
                     onEdit={handleEdit}

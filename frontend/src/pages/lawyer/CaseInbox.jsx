@@ -52,6 +52,7 @@ const CaseInbox = () => {
                                 <button className="btn btn-primary" onClick={() => handleAccept(item._id)}>
                                     Accept Case
                                 </button>
+                                <p style={{ fontSize: '0.8rem', marginTop: '10px', color: '#666' }}>* Accept to enable chat</p>
                             </div>
                         ))}
                     </div>

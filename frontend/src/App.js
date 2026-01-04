@@ -33,6 +33,10 @@ import EditCase from './pages/cases/EditCase';
 import CaseInbox from './pages/lawyer/CaseInbox';
 import MyLawyerCases from './pages/lawyer/MyLawyerCases';
 import MyClients from './pages/lawyer/MyClients';
+import CaseChat from './pages/chat/CaseChat';
+
+
+
 
 
 import Header from './components/common/Header';
@@ -80,6 +84,7 @@ function App() {
 
               <Route path="/cases/my" element={<PrivateRoute><MyCases /></PrivateRoute>} />
               <Route path="/cases/:id" element={<PrivateRoute><CaseDetails /></PrivateRoute>} />
+              <Route path="/cases/:caseId/communicate" element={<PrivateRoute><CaseChat /></PrivateRoute>} />
               <Route path="/cases/:id/edit" element={<PrivateRoute><EditCase /></PrivateRoute>} />
 
               <Route path="/lawyer/inbox" element={<PrivateRoute><CaseInbox /></PrivateRoute>} />

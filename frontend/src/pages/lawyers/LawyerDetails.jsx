@@ -68,6 +68,11 @@ const LawyerDetails = () => {
                         }}>
                             {lawyer.isVerified ? 'Verified Lawyer' : 'Pending Verification'}
                         </span>
+                        {lawyer.licenseNumber && (
+                            <p style={{ marginTop: '8px', fontSize: '0.9rem', color: '#64748b' }}>
+                                License: <span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{lawyer.licenseNumber}</span>
+                            </p>
+                        )}
                     </div>
                 </div>
 

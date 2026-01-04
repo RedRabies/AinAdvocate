@@ -16,7 +16,12 @@ require('./features/users/client.model');
 require('./features/lawyers/lawyer.model');
 require('./features/cases/case.model');
 
+const http = require('http');
+const { initSocket } = require('./features/chat/socket');
+
 const app = express();
+const server = http.createServer(app);
+const io = initSocket(server);
 
 // Middleware
 app.use(cors());
@@ -33,6 +38,10 @@ app.use('/api/auth', require('./features/auth/auth.routes'));
 app.use('/api/lawyers', require('./features/lawyers/lawyer.routes'));
 app.use('/api/resources', require('./features/resources/resource.routes'));
 app.use('/api/cases', require('./features/cases/case.routes'));
+app.use('/api/chat', require('./features/chat/chat.routes'));
+app.use('/api/appointments', require('./features/appointments/appointment.routes'));
+app.use('/api/payments', require('./features/payments/payment.routes'));
+app.use('/api/invoices', require('./features/invoices/invoice.routes'));
 
 
 
@@ -60,4 +69,4 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

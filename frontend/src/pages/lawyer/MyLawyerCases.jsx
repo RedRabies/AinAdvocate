@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getAssignedCases, updateCaseStatus } from '../../services/case.service';
 import CaseStatusControl from '../../components/cases/CaseStatusControl';
 import { useToast } from '../../components/common/Toast';
@@ -53,6 +54,14 @@ const MyLawyerCases = () => {
                                 </div>
                                 <p>Client: {item.clientId?.name || 'Unknown'}</p>
                                 <p>{item.description}</p>
+                                <div style={{ marginTop: '10px' }}>
+                                    <Link to={`/cases/${item._id}/communicate`} className="btn" style={{
+                                        background: '#3b82f6', color: 'white', textDecoration: 'none',
+                                        display: 'inline-block', padding: '6px 12px', borderRadius: '4px', fontSize: '0.9rem'
+                                    }}>
+                                        💬 Open Chat & Actions
+                                    </Link>
+                                </div>
                             </div>
                         ))}
                     </div>

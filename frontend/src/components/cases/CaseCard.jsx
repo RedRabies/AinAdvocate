@@ -52,9 +52,22 @@ const CaseCard = ({ data }) => {
                 {/* Future: Add View Details / Chat button here */}
             </div>
 
-            <Link to={`/cases/${data._id}`} className="btn btn-outline-primary" style={{ display: 'block', textAlign: 'center', marginTop: '15px', textDecoration: 'none' }}>
-                View Details
-            </Link>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '15px' }}>
+                <Link to={`/cases/${data._id}`} className="btn btn-outline-primary" style={{ textAlign: 'center', textDecoration: 'none', padding: '8px' }}>
+                    View Details
+                </Link>
+                <Link to={`/cases/${data._id}/communicate`} style={{
+                    textAlign: 'center',
+                    textDecoration: 'none',
+                    padding: '8px',
+                    background: '#e0f2fe',
+                    color: '#0284c7',
+                    borderRadius: '6px',
+                    fontWeight: '600'
+                }}>
+                    💬 Chat
+                </Link>
+            </div>
         </div>
     );
 };
